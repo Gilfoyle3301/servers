@@ -4,10 +4,9 @@ import (
 	"io"
 	"log"
 	"net"
-	"sync"
 )
 
-func echoHandler(connection net.Conn, wg *sync.WaitGroup) {
+func echoHandler(connection net.Conn) {
 	defer connection.Close()
 	var buffer []byte = make([]byte, 1096)
 	for {
@@ -26,26 +25,23 @@ func echoHandler(connection net.Conn, wg *sync.WaitGroup) {
 			log.Fatalln("Unable writing data")
 		}
 		log.Println("Return data succes")
-		wg.Done()
 
 	}
 
 }
 
 func main() {
-	var wg sync.WaitGroup
 	dial, err := net.Listen("tcp", "[::1]:5555")
 	if err != nil {
 		log.Fatalln("error to bind port")
 	}
 	log.Println("listen addres 0.0.0.0:5555")
-
-	connection, err := dial.Accept()
-	if err != nil {
-		log.Println("error connection")
+	for {
+		connection, err := dial.Accept()
+		if err != nil {
+			log.Println("error connection")
+		}
+		go echoHandler(connection)
 	}
-	wg.Add(1)
-	go echoHandler(connection, &wg)
-	wg.Wait()
 
 }
